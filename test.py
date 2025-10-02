@@ -64,7 +64,7 @@ model = create_x3d(
     model_num_class=num_classes
 )
 
-ckpt = torch.load("x3d-s-checkpoints/819model.pth", map_location=device)
+ckpt = torch.load("819model.pth", map_location=device)
 model.load_state_dict(ckpt)
 model = model.to(device).eval()
 
@@ -123,4 +123,5 @@ print(cm)
 
 print("\nClassification Report:")
 print(classification_report(y_true, y_pred, target_names=["normal", "anomalous"]))
+
 
