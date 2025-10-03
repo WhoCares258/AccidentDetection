@@ -14,12 +14,18 @@ from pytorchvideo.models.x3d import create_x3d
 from sklearn.metrics import confusion_matrix, classification_report
 
 # --------------------------
-# 1. Setup
+# 1. Setup (editable)
 # --------------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 num_classes = 2
 frames_per_second = 30
 
+# Paths (edit here)
+dataset_root = "accident_segmented"   # root folder with normal/ and anomalous/
+test_file = "accident_test.txt"       # file with test video list (only paths)
+ckpt_path = "x3d-s-checkpoints/819model.pth"
+
+# Transform parameters
 transform_params = {
     "side_size": 128,
     "crop_size": 128,
@@ -64,7 +70,7 @@ model = create_x3d(
     model_num_class=num_classes
 )
 
-ckpt = torch.load("819model.pth", map_location=device)
+ckpt = torch.load(ckpt_path, map_location=device)
 model.load_state_dict(ckpt)
 model = model.to(device).eval()
 
@@ -86,29 +92,38 @@ def predict_video(video_path):
 
 
 # --------------------------
-# 5. Evaluate on Test Folders
+# 5. Load Test List & Evaluate
 # --------------------------
-test_dirs = {
-    "normal": "accident_segmented/test/normal",
-    "anomalous": "accident_segmented/test/anomalous"
-}
-
 y_true, y_pred = [], []
 
-for label_str, folder in test_dirs.items():
-    label = 0 if label_str == "normal" else 1
-    for fname in os.listdir(folder):
-        if not fname.lower().endswith((".mp4", ".avi", ".mov")):
-            continue
-        path = os.path.join(folder, fname)
-        pred, probs = predict_video(path)
+with open(test_file, "r") as f:
+    lines = [line.strip() for line in f if line.strip()]
 
-        y_true.append(label)
-        y_pred.append(pred)
+for rel_path in lines:
+    # infer label from folder name
+    if rel_path.startswith("normal/"):
+        label = 0
+    elif rel_path.startswith("anomalous/"):
+        label = 1
+    else:
+        print(f"[WARNING] Could not infer label from path: {rel_path}")
+        continue
 
-        print(f"{fname:40} | True: {label_str:9} | "
-              f"Pred: {'anomalous' if pred else 'normal':9} | "
-              f"Probs: {probs.round(3)}")
+    path = os.path.join(dataset_root, rel_path)
+
+    if not os.path.exists(path):
+        print(f"[WARNING] Missing file: {path}")
+        continue
+
+    pred, probs = predict_video(path)
+
+    y_true.append(label)
+    y_pred.append(pred)
+
+    print(f"{rel_path:40} | True: {'normal' if label==0 else 'anomalous':9} | "
+          f"Pred: {'normal' if pred==0 else 'anomalous':9} | "
+          f"Probs: {probs.round(3)}")
+
 
 # --------------------------
 # 6. Report Metrics
@@ -123,5 +138,3 @@ print(cm)
 
 print("\nClassification Report:")
 print(classification_report(y_true, y_pred, target_names=["normal", "anomalous"]))
-
-
