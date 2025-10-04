@@ -23,12 +23,12 @@ frames_per_second = 30
 # Paths (edit here)
 dataset_root = "accident_segmented"   # root folder with normal/ and anomalous/
 test_file = "accident_test.txt"       # file with test video list (only paths)
-ckpt_path = "x3d-s-checkpoints/819model.pth"
+ckpt_path = "819model.pth"
 
 # Transform parameters
 transform_params = {
-    "side_size": 128,
-    "crop_size": 128,
+    "side_size": 180,
+    "crop_size": 180,
     "num_frames": 30,
     "sampling_rate": 4,
 }
@@ -138,3 +138,4 @@ print(cm)
 
 print("\nClassification Report:")
 print(classification_report(y_true, y_pred, target_names=["normal", "anomalous"]))
+
