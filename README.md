@@ -1,152 +1,96 @@
-# 🚦 SCAD: Surveillance Curated Accident Dataset and X3D-Based Detection
-
-> Official repository for **“From Chaos to Detection: Accident Benchmarking in Surveillance Videos with a Curated Dataset and 3D CNN.”**  
-> This project introduces **SCAD**, a *clean, reproducible*, and *benchmark-ready* dataset for accident detection in surveillance videos, alongside a **lightweight X3D-based 3D CNN** reference model.
-
----
-
-## 📘 Overview  
-SCAD addresses a critical problem in existing anomaly-detection datasets: contamination from *scene duplication, annotation artifacts, and cross-partition overlap* that lead to inflated benchmark metrics.  
-We curate and clean multiple public surveillance datasets to build a balanced, transparent, and ready-to-train accident detection benchmark.
-
-**Key Features:**
-- 🧹 **High-quality clips** — 513 accident and non-accident scenes, filtered and segmented  
-- ⚙️ **Lightweight model** — based on X3D, suitable for limited compute  
-- 🧪 **End-to-end pipeline** — segmentation → training → testing → inference  
-- 🔍 **Transparent benchmarking** — no cross-over contamination, reproducible splits  
-
----
-
-## 🗂️ Repository Structure
-
-AccidentDetection/
-├── videos/ # Unsegmented source videos
-│
-├── accident/
-│ ├── anomalous/ # Clips with accidents
-│ ├── normal/ # Clips without accidents
-│ ├── train/ # Training split folder
-│ ├── test/ # Testing split folder
-│ ├── accident_train.txt # List of training clips
-│ └── accident_test.txt # List of testing clips
-│
-├── segment.py # Script to segment videos
-├── train.py # Training / fine-tuning script
-├── test.py # Testing / evaluation script
-├── inference.py # Real-time inference script
-├── 81.9model.pth # Baseline pretrained checkpoint
-├── 84.48model.pth # Enhanced pretrained checkpoint
-└── README.md # This file
-
-yaml
-Copy code
-
----
-
-## 🎬 Dataset Description
-
-SCAD is constructed from multiple established public datasets. Each video is subdivided into **4-second clips**, overlapping by **3 seconds**, ensuring full capture of events. We carefully remove duplicates and cross-dataset overlaps to preserve benchmark integrity.
-
-| Source | Reference | Role in SCAD |
-|--------|-----------|---------------|
-| **CADP** | IEEE AVSS 2018 | CCTV-based traffic accident dataset |
-| **So-TAD** | Neurocomputing 2025 | Surveillance-oriented traffic anomaly dataset |
-| **TU-DAT** | Sensors 2025 | Road traffic anomaly dataset |
-| **UCF-Crime** | CVPR 2018 | General anomaly dataset containing accidents |
-
-> **Usage**: SCAD is provided for **academic research only**. When you use the dataset or model, please cite both this repository and the corresponding paper (once accepted).
-
----
-
-## 🚀 Usage Guide
-
-### 1️⃣ Segment Raw Videos  
-Use the segmentation script:
-
-```bash
+📘 Overview
+Current anomaly detection benchmarks often suffer from scene duplication, annotation artifacts, and cross-partition overlaps — issues that inflate model performance.
+SCAD addresses these flaws by providing a curated, transparent, and ethically cleaned dataset that allows true benchmarking in accident detection.
+🔑 Highlights
+🧹 Clean & verified dataset — 513 labeled accident and non-accident clips
+⚙️ Lightweight 3D model — X3D-based for efficient training on modest GPUs
+🧪 End-to-end pipeline — segmentation → training → evaluation → inference
+🔍 Reproducible splits — zero cross-contamination between train/test data
+🎬 Dataset Description
+The SCAD Dataset was meticulously constructed from multiple public surveillance datasets. Each raw video was segmented into 4-second clips (with 3-second overlap) to ensure complete scene coverage while maintaining clip balance. All redundant and overlapping frames were removed to ensure benchmarking purity.
+Source	Reference	Role in SCAD
+CADP	IEEE AVSS 2018	CCTV-based traffic accident dataset
+So-TAD	Neurocomputing 2025	Surveillance-oriented traffic anomaly dataset
+TU-DAT	Sensors 2025	Road traffic anomaly dataset
+UCF-Crime	CVPR 2018	General anomaly dataset including accidents
+⚠️ Academic Use Only
+SCAD is intended for research and benchmarking purposes under academic usage terms.
+Please cite this repository and the associated paper once published.
+🚀 Usage Guide
+🧩 1. Segment Raw Videos
+Generate 4-second overlapping clips from long videos.
+code
+Bash
 python segment.py
-Before running, edit:
-
-python
-Copy code
-# segment.py
-input_folder  = "videos/"  
+Before running, adjust your paths inside segment.py:
+code
+Python
+input_folder  = "videos/"
 output_folder = "accident/"
-This script outputs 4-second clips into anomalous/ or normal/ subfolders.
-
-2️⃣ Prepare Train/Test Splits
-Create the files:
-
+🧾 2. Prepare Train/Test Splits
+Create two text files in your main dataset folder:
+code
+Code
 accident_train.txt
-
 accident_test.txt
-
-Each line should list a clip path relative to accident/, e.g.:
-
-bash
-Copy code
-anomalous/clip_001.mp4  
-normal/clip_145.mp4  
-3️⃣ Train the X3D Model
-Run:
-
-bash
-Copy code
+Each line should specify the relative path of a clip, for example:
+code
+Bash
+anomalous/clip_001.mp4
+normal/clip_145.mp4
+🧠 3. Train the X3D Model
+Fine-tune the pretrained X3D model on SCAD:
+code
+Bash
 python train.py
-Within train.py, configure:
-
-python
-Copy code
-main_folder  = "accident/"  
-train_split  = "accident_train.txt"  
+Edit these variables before training:
+code
+Python
+main_folder  = "accident/"
+train_split   = "accident_train.txt"
 test_split   = "accident_test.txt"
-You can also adjust: input size, frame count, sampling rate, learning rate, optimizer, pretrained checkpoint, etc.
-
-4️⃣ Evaluate Model
-Run:
-
-bash
-Copy code
+You can also modify:
+Input resolution
+Frame sampling rate
+Optimizer and learning rate
+Pretrained checkpoint path
+🧪 4. Evaluate Model Performance
+code
+Bash
 python test.py
-Edit:
-
-python
-Copy code
-dataset_folder = "accident/"  
-test_split     = "accident_test.txt"  
+Edit inside test.py:
+code
+Python
+dataset_folder = "accident/"
+test_split     = "accident_test.txt"
 model_path     = "84.48model.pth"
-5️⃣ Real-Time Inference
-Run:
-
-bash
-Copy code
+⚡ 5. Real-Time Inference
+Run detection on live or recorded video:
+code
+Bash
 python inference.py
-It automatically segments incoming frames and outputs alerts when it detects anomalous (accident) events.
-
+The script continuously processes frames and prints an alert when anomalous activity (accident) is detected.
 🧠 Model & Architecture
-Backbone: X3D (efficient spatio-temporal architecture)
-
-Framework: PyTorch
-
-Input: RGB frame sequences
-
-Output: Binary classification (accident / non-accident)
-
-🔗 Related Work & Link
-We build upon the STEAD anomaly detection repository, whose efficient spatio-temporal modeling inspired aspects of our design.
-See more at: agao8/STEAD 
-GitHub
-
-👥 Credits & Inspirations
-STEAD by Andrew Gao & Jun Liu — efficient anomaly detection foundation
-
-X3D (Feichtenhofer et al.) — lightweight 3D CNN architecture
-
-Original datasets: CADP, So-TAD, TU-DAT, UCF-Crime
-
+Component	Description
+Backbone	X3D (efficient spatio-temporal CNN by Facebook AI)
+Framework	PyTorch
+Input	RGB frame sequences
+Output	Binary classification (accident / non-accident)
+Two pretrained models are included for immediate benchmarking:
+Model	Resolution	Frames	Description
+81.9model.pth	128×128	30	Baseline model
+84.48model.pth	182×182	25	Enhanced configuration
+🔗 Related Work
+The SCAD implementation draws inspiration from prior work in spatio-temporal event detection.
+Notably, it extends ideas from the STEAD repository by A. Gao, adapting them for curated accident detection and fair benchmarking.
+👥 Credits & Acknowledgments
+STEAD by Andrew Gao & Jun Liu — foundational reference for anomaly detection efficiency
+X3D by C. Feichtenhofer et al. (Facebook AI) — compact 3D CNN backbone
+Source datasets: CADP, So-TAD, TU-DAT, UCF-Crime
 🧾 Citation
-bibtex
-Copy code
+If you use this work, please cite as follows:
+code
+Bibtex
 @inproceedings{scad2025,
   title     = {From Chaos to Detection: Accident Benchmarking in Surveillance Videos with a Curated Dataset and 3D CNN},
   author    = {Authors of SCAD},
@@ -179,10 +123,5 @@ Copy code
   booktitle = {CVPR},
   year      = {2018}
 }
-⭐ If this work supports your research, please star the repository and help others by citing this paper when it's published.
-
-pgsql
-Copy code
-
-If you like, I can also generate a **compact version** (for the GitHub homepage) and a **detailed document** (for `/docs/`) for you. Do you want me to prepare those?
-::contentReference[oaicite:1]{index=1}
+⭐ If this repository helps your research, please consider giving it a star!
+Help promote open, reproducible benchmarking in surveillance accident detection.
